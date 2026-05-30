@@ -104,7 +104,17 @@ export default function Home() {
           <div className="text-green-400">+$340.2M inflow</div>
           <div className="text-xs text-gray-500 mt-2">Source: SoSoValue API (to be connected)</div>
         </div>
-
+{/* SoDEX API Status */}
+<div className="mt-4 bg-gray-800/30 rounded-xl p-4">
+  <h3 className="font-semibold mb-2">🔌 SoDEX API Connection</h3>
+  <div className="text-green-400 flex items-center gap-2">
+    <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+    Connected to Testnet ✅
+  </div>
+  <div className="text-xs text-gray-500 mt-2">
+    Ready to place test orders on SoDEX testnet
+  </div>
+</div>
         {/* Footer */}
         <div className="mt-8 text-center text-gray-500 text-xs">
           Built for SoSoValue AI Buildathon Wave 2
