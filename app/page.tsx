@@ -107,7 +107,7 @@ export default function Home() {
 
         {/* Footer */}
         <div className="mt-8 text-center text-gray-500 text-xs">
-          Built for SoSoValue AI Buildathon Wave 2 • Powered by DeepSeek
+          Built for SoSoValue AI Buildathon Wave 2
         </div>
       </div>
     </main>
