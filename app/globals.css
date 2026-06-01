@@ -1,22 +1,19 @@
 @import "tailwindcss";
 
 @theme {
-  /* Background Colors */
-  --color-soso-bg: #0D0D0D;
-  --color-soso-card: #1A1A1A;
-  
-  /* Accent Colors */
-  --color-soso-accent: #FF8C00;
-  --color-soso-accent-hover: #E07B00;
-  
-  /* Text Colors */
+  /* SoSoValue Official Colors */
+  --color-soso-bg: #0A0A0A;
+  --color-soso-card: #141414;
+  --color-soso-accent: #FF6B00;
+  --color-soso-accent-hover: #E05A00;
   --color-soso-text-primary: #FFFFFF;
-  --color-soso-text-secondary: #A0A0A0;
-  
-  /* Status Colors */
-  --color-soso-success: #30D158;
-  --color-soso-danger: #FF453A;
-  
-  /* Border */
-  --color-soso-border: #2A2A2A;
+  --color-soso-text-secondary: #888888;
+  --color-soso-success: #00C853;
+  --color-soso-danger: #FF3B30;
+  --color-soso-border: #222222;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
 }
