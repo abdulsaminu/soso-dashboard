@@ -1,19 +1,68 @@
 @import "tailwindcss";
 
 @theme {
-  /* SoSoValue Official Colors */
-  --color-soso-bg: #0A0A0A;
-  --color-soso-card: #141414;
-  --color-soso-accent: #FF6B00;
-  --color-soso-accent-hover: #E05A00;
-  --color-soso-text-primary: #FFFFFF;
-  --color-soso-text-secondary: #888888;
-  --color-soso-success: #00C853;
-  --color-soso-danger: #FF3B30;
-  --color-soso-border: #222222;
+  /* Neon Glass Theme Colors */
+  --color-bg-dark: #0A0A0F;
+  --color-glass: rgba(20, 20, 35, 0.6);
+  --color-glass-border: rgba(100, 100, 255, 0.2);
+  --color-neon-purple: #A855F7;
+  --color-neon-cyan: #06B6D4;
+  --color-neon-pink: #EC4899;
+  --color-neon-green: #10B981;
+  --color-neon-orange: #F97316;
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #A1A1AA;
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+/* Animated Gradient Background */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animated-bg {
+  background: linear-gradient(
+    135deg,
+    #0A0A0F 0%,
+    #1A1030 25%,
+    #0F172A 50%,
+    #1A1030 75%,
+    #0A0A0F 100%
+  );
+  background-size: 200% 200%;
+  animation: gradientShift 10s ease infinite;
+}
+
+/* Glassmorphism Card */
+.glass-card {
+  background: rgba(20, 20, 40, 0.5);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Neon Glow Effect */
+.neon-glow {
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.3), 0 0 40px rgba(6, 182, 212, 0.1);
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse-slow {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, #A855F7, #06B6D4, #EC4899);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradientShift 3s ease infinite;
 }
