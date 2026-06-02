@@ -6,6 +6,7 @@ import {
   Sparkles, Coins, BarChart3, Shield, Clock, 
   Target, Eye, Wallet, RefreshCw, CheckCircle, XCircle 
 } from "lucide-react";
+import PriceChart from './components/PriceChart';
 
 type Asset = 'BTC' | 'ETH' | 'SOL';
 type Signal = {
@@ -43,7 +44,6 @@ export default function Home() {
       
       if (data.error) throw new Error(data.error);
       
-      // Set data based on selected asset
       const assetData = data[selectedAsset.toLowerCase()];
       setPrice(assetData.price);
       setChange24h(assetData.change24h);
@@ -54,7 +54,6 @@ export default function Home() {
       setAccuracy(data.accuracy);
     } catch (error) {
       console.error('Fetch error:', error);
-      // Fallback mock data
       setPrice(selectedAsset === 'BTC' ? 69420 : selectedAsset === 'ETH' ? 3800 : 180);
       setChange24h(2.34);
       setSignal({
@@ -107,9 +106,9 @@ export default function Home() {
   }, [selectedAsset]);
 
   const assetButtons = [
-    { symbol: 'BTC', name: 'Bitcoin', icon: '🟠' },
-    { symbol: 'ETH', name: 'Ethereum', icon: '💠' },
-    { symbol: 'SOL', name: 'Solana', icon: '🟣' },
+    { symbol: 'BTC', name: 'Bitcoin', icon: '/coins/btc.svg' },
+    { symbol: 'ETH', name: 'Ethereum', icon: '/coins/eth.svg' },
+    { symbol: 'SOL', name: 'Solana', icon: '/coins/sol.svg' },
   ];
 
   return (
@@ -148,13 +147,13 @@ export default function Home() {
             <button
               key={asset.symbol}
               onClick={() => setSelectedAsset(asset.symbol as Asset)}
-              className={`px-5 py-2 rounded-xl font-medium transition-all duration-200 ${
+              className={`px-5 py-2 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 ${
                 selectedAsset === asset.symbol
                   ? 'bg-soso-accent text-white shadow-lg shadow-soso-accent/25'
                   : 'glass-card text-soso-text-secondary hover:text-white hover:border-soso-accent/50'
               }`}
             >
-              <span className="mr-2">{asset.icon}</span>
+              <img src={asset.icon} alt={asset.name} className="w-5 h-5" />
               {asset.name}
             </button>
           ))}
@@ -162,7 +161,7 @@ export default function Home() {
 
         {/* 4 Stats Cards */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <div className="glass-card rounded-2xl p-5">
+          <div className="glass-card p-5">
             <div className="flex items-center gap-3 mb-2">
               <Coins className="text-soso-accent" size={24} />
               <span className="text-soso-text-secondary text-sm">{selectedAsset}/USD</span>
@@ -179,7 +178,7 @@ export default function Home() {
             )}
           </div>
 
-          <div className="glass-card rounded-2xl p-5">
+          <div className="glass-card p-5">
             <div className="flex items-center gap-3 mb-2">
               <BarChart3 className="text-soso-accent" size={24} />
               <span className="text-soso-text-secondary text-sm">Market Sentiment</span>
@@ -188,7 +187,7 @@ export default function Home() {
             <div className="text-soso-text-secondary text-sm mt-1">Score: {sentiment?.score || 50}/100</div>
           </div>
 
-          <div className="glass-card rounded-2xl p-5">
+          <div className="glass-card p-5">
             <div className="flex items-center gap-3 mb-2">
               <Target className="text-soso-accent" size={24} />
               <span className="text-soso-text-secondary text-sm">Signal Accuracy</span>
@@ -197,7 +196,7 @@ export default function Home() {
             <div className="text-soso-text-secondary text-sm mt-1">Last 30 days</div>
           </div>
 
-          <div className="glass-card rounded-2xl p-5">
+          <div className="glass-card p-5">
             <div className="flex items-center gap-3 mb-2">
               <Shield className="text-soso-accent" size={24} />
               <span className="text-soso-text-secondary text-sm">Auto-Trade</span>
@@ -218,12 +217,12 @@ export default function Home() {
 
         {/* Main Signal Card */}
         {loading ? (
-          <div className="glass-card rounded-2xl p-16 text-center">
+          <div className="glass-card p-16 text-center">
             <Activity className="animate-spin mx-auto mb-4 text-soso-accent" size={48} />
             <p className="text-soso-text-secondary">Analyzing DeFi market data...</p>
           </div>
         ) : signal && (
-          <div className="glass-card rounded-2xl p-8 mb-8 border-l-4 border-l-soso-accent neon-orange-glow">
+          <div className="glass-card p-8 mb-8 border-l-4 border-l-soso-accent neon-orange-glow">
             <div className="flex items-start justify-between flex-wrap gap-4">
               <div className="flex items-center gap-4">
                 {signal.direction === "bullish" ? (
@@ -283,7 +282,7 @@ export default function Home() {
         )}
 
         {/* Whale Watch Alerts Panel */}
-        <div className="glass-card rounded-2xl p-6 mb-6">
+        <div className="glass-card p-6 mb-6">
           <div className="flex items-center gap-2 mb-4">
             <Eye className="text-soso-accent" size={20} />
             <h3 className="font-semibold">🐋 Whale Watch Alerts</h3>
@@ -307,9 +306,14 @@ export default function Home() {
           )}
         </div>
 
+        {/* Price Chart */}
+        <div className="mt-6">
+          <PriceChart />
+        </div>
+
         {/* Two Column Info Panels */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="glass-card rounded-2xl p-6 hover:border-soso-accent transition-all duration-300">
+        <div className="grid md:grid-cols-2 gap-6 mt-6">
+          <div className="glass-card p-6 hover:border-soso-accent transition-all duration-300">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-2xl">📊</span>
               <h3 className="font-semibold">ETF Flow (24h)</h3>
@@ -328,7 +332,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="glass-card rounded-2xl p-6 hover:border-soso-accent transition-all duration-300">
+          <div className="glass-card p-6 hover:border-soso-accent transition-all duration-300">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-2xl">🔌</span>
               <h3 className="font-semibold">SoDEX Integration</h3>
@@ -349,7 +353,7 @@ export default function Home() {
         {/* Footer */}
         <footer className="mt-12 pt-6 border-t border-soso-border text-center">
           <p className="text-soso-text-secondary text-sm">
-            Built for SoSoValue AI Buildathon Wave 2 •
+            Built for SoSoValue AI Buildathon Wave 2
           </p>
           <p className="text-soso-text-secondary/50 text-xs mt-2">
             Real-time DeFi data • AI signals • SoDEX integration • Whale alerts • Signal accuracy tracking

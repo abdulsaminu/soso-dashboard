@@ -3,23 +3,24 @@
 @theme {
   /* SoSoValue Official Colors */
   --color-soso-bg: #090909;
-  --color-soso-card: #141414;
+  --color-soso-card: rgba(20, 20, 20, 0.6);
   --color-soso-accent: #FF7300;
   --color-soso-accent-hover: #E06600;
   --color-soso-text-primary: #FFFFFF;
   --color-soso-text-secondary: #A0A0A0;
   --color-soso-success: #30D158;
   --color-soso-danger: #FF453A;
-  --color-soso-border: #2A2A2A;
+  --color-soso-border: rgba(255, 115, 0, 0.15);
 }
 
-/* SoSoValue Base Styles */
+/* Base Styles */
 html {
   scroll-behavior: smooth;
 }
 
 body {
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: #090909;
 }
 
 /* New Background with Radial Gradient */
@@ -50,7 +51,7 @@ body {
   z-index: 0;
 }
 
-/* Floating Hexagon Shapes (DeFi abstract pattern) */
+/* Floating Hexagon Shapes */
 .defi-bg::after {
   content: "";
   position: fixed;
@@ -66,17 +67,18 @@ body {
   opacity: 0.5;
 }
 
-/* Glass Card */
+/* Glass Card Effect */
 .glass-card {
-  background: rgba(20, 20, 20, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid #2A2A2A;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 115, 0, 0.12);
+  border-radius: 1.5rem;
   transition: all 0.3s ease;
 }
 
 .glass-card:hover {
-  border-color: #FF7300;
-  box-shadow: 0 0 20px rgba(255, 115, 0, 0.15);
+  border-color: rgba(255, 115, 0, 0.35);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* Gradient Text */
@@ -90,8 +92,8 @@ body {
 
 /* Animated Orange Glow */
 @keyframes orangeGlow {
-  0%, 100% { box-shadow: 0 0 5px rgba(255, 115, 0, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(255, 115, 0, 0.5); }
+  0%, 100% { box-shadow: 0 0 5px rgba(255, 115, 0, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(255, 115, 0, 0.35); }
 }
 
 .neon-orange-glow {
