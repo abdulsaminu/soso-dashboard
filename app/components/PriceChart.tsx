@@ -28,6 +28,12 @@ const generateMockData = () => {
 export default function PriceChart() {
   const data = generateMockData();
 
+  // Custom tooltip formatter that handles undefined values
+  const formatTooltipValue = (value: number | undefined | null) => {
+    if (value === undefined || value === null) return ['$0', 'Price'];
+    return [`$${value.toLocaleString()}`, 'Price'];
+  };
+
   return (
     <div className="glass-card p-6 w-full">
       <h3 className="font-semibold mb-4 text-soso-text-primary flex items-center gap-2">
@@ -60,7 +66,7 @@ export default function PriceChart() {
               borderRadius: '12px',
               color: '#FFFFFF',
             }}
-            formatter={(value: number) => [`$${value.toLocaleString()}`, 'Price']}
+            formatter={formatTooltipValue}
           />
           <Area
             type="monotone"
