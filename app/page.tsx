@@ -107,9 +107,9 @@ export default function Home() {
   }, [selectedAsset]);
 
   const assetButtons = [
-    { symbol: 'BTC', name: 'Bitcoin', icon: '₿' },
-    { symbol: 'ETH', name: 'Ethereum', icon: 'Ξ' },
-    { symbol: 'SOL', name: 'Solana', icon: '◎' },
+    { symbol: 'BTC', name: 'Bitcoin', icon: '🟠' },
+    { symbol: 'ETH', name: 'Ethereum', icon: '💠' },
+    { symbol: 'SOL', name: 'Solana', icon: '🟣' },
   ];
 
   return (
@@ -349,7 +349,7 @@ export default function Home() {
         {/* Footer */}
         <footer className="mt-12 pt-6 border-t border-soso-border text-center">
           <p className="text-soso-text-secondary text-sm">
-            Built for SoSoValue AI Buildathon Wave 2 • Powered by DeepSeek
+            Built for SoSoValue AI Buildathon Wave 2 •
           </p>
           <p className="text-soso-text-secondary/50 text-xs mt-2">
             Real-time DeFi data • AI signals • SoDEX integration • Whale alerts • Signal accuracy tracking
