@@ -2,10 +2,10 @@
 
 @theme {
   /* SoSoValue Official Colors */
-  --color-soso-bg: #0D0D0D;
+  --color-soso-bg: #090909;
   --color-soso-card: #141414;
-  --color-soso-accent: #FF8C00;
-  --color-soso-accent-hover: #E07B00;
+  --color-soso-accent: #FF7300;
+  --color-soso-accent-hover: #E06600;
   --color-soso-text-primary: #FFFFFF;
   --color-soso-text-secondary: #A0A0A0;
   --color-soso-success: #30D158;
@@ -22,13 +22,19 @@ body {
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Abstract DeFi Background Pattern */
+/* New Background with Radial Gradient */
 .defi-bg {
   position: relative;
-  background-color: #0D0D0D;
+  background: radial-gradient(
+    circle at top,
+    rgba(255, 115, 0, 0.15),
+    transparent 40%
+  ), #090909;
+  min-height: 100vh;
   overflow-x: hidden;
 }
 
+/* Subtle Grid Pattern Overlay */
 .defi-bg::before {
   content: "";
   position: fixed;
@@ -37,14 +43,14 @@ body {
   width: 100%;
   height: 100%;
   background-image: 
-    linear-gradient(rgba(255, 140, 0, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 140, 0, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(255, 115, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 115, 0, 0.03) 1px, transparent 1px);
   background-size: 50px 50px;
   pointer-events: none;
   z-index: 0;
 }
 
-/* Floating Hexagon Shapes */
+/* Floating Hexagon Shapes (DeFi abstract pattern) */
 .defi-bg::after {
   content: "";
   position: fixed;
@@ -52,12 +58,12 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23FF8C00' fill-opacity='0.03' d='M50,10 L90,30 L90,70 L50,90 L10,70 L10,30 Z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23FF7300' fill-opacity='0.03' d='M50,10 L90,30 L90,70 L50,90 L10,70 L10,30 Z'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 80px 80px;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.4;
+  opacity: 0.5;
 }
 
 /* Glass Card */
@@ -69,13 +75,13 @@ body {
 }
 
 .glass-card:hover {
-  border-color: #FF8C00;
-  box-shadow: 0 0 20px rgba(255, 140, 0, 0.1);
+  border-color: #FF7300;
+  box-shadow: 0 0 20px rgba(255, 115, 0, 0.15);
 }
 
 /* Gradient Text */
 .gradient-text {
-  background: linear-gradient(135deg, #FF8C00, #FFB347);
+  background: linear-gradient(135deg, #FF7300, #FFB347);
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
@@ -84,8 +90,8 @@ body {
 
 /* Animated Orange Glow */
 @keyframes orangeGlow {
-  0%, 100% { box-shadow: 0 0 5px rgba(255, 140, 0, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(255, 140, 0, 0.5); }
+  0%, 100% { box-shadow: 0 0 5px rgba(255, 115, 0, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(255, 115, 0, 0.5); }
 }
 
 .neon-orange-glow {
