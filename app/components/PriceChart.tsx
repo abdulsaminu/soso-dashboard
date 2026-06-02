@@ -10,7 +10,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 
-// Mock price data (will be replaced with real API data)
+// Generate mock data
 const generateMockData = () => {
   const data = [];
   let price = 68000;
@@ -19,7 +19,7 @@ const generateMockData = () => {
     price = price + change;
     data.push({
       date: `${i} days ago`,
-      price: price,
+      price: Math.round(price),
     });
   }
   return data.reverse();
@@ -28,15 +28,9 @@ const generateMockData = () => {
 export default function PriceChart() {
   const data = generateMockData();
 
-  // Custom tooltip formatter that handles undefined values
-  const formatTooltipValue = (value: number | undefined | null) => {
-    if (value === undefined || value === null) return ['$0', 'Price'];
-    return [`$${value.toLocaleString()}`, 'Price'];
-  };
-
   return (
     <div className="glass-card p-6 w-full">
-      <h3 className="font-semibold mb-4 text-soso-text-primary flex items-center gap-2">
+      <h3 className="font-semibold mb-4 text-white flex items-center gap-2">
         <span className="text-xl">📈</span> Price Chart (30 Days)
       </h3>
       <ResponsiveContainer width="100%" height={300}>
@@ -47,26 +41,25 @@ export default function PriceChart() {
               <stop offset="95%" stopColor="#FF7300" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#333" />
           <XAxis 
             dataKey="date" 
-            tick={{ fill: '#A0A0A0', fontSize: 12 }}
-            axisLine={{ stroke: '#2A2A2A' }}
+            tick={{ fill: '#999', fontSize: 12 }}
+            axisLine={{ stroke: '#333' }}
           />
           <YAxis 
-            tick={{ fill: '#A0A0A0', fontSize: 12 }}
-            axisLine={{ stroke: '#2A2A2A' }}
+            tick={{ fill: '#999', fontSize: 12 }}
+            axisLine={{ stroke: '#333' }}
             domain={['auto', 'auto']}
             tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
           />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: '#141414',
-              border: '1px solid rgba(255, 115, 0, 0.2)',
-              borderRadius: '12px',
-              color: '#FFFFFF',
-            }}
-            formatter={formatTooltipValue}
+          <Tooltip 
+            contentStyle={{ 
+              backgroundColor: '#1a1a1a', 
+              border: '1px solid #FF7300',
+              borderRadius: '8px',
+              color: 'white'
+            }} 
           />
           <Area
             type="monotone"
@@ -77,8 +70,8 @@ export default function PriceChart() {
           />
         </AreaChart>
       </ResponsiveContainer>
-      <div className="text-soso-text-secondary text-xs text-center mt-4">
-        Real-time data coming soon with SoSoValue API integration
+      <div className="text-gray-500 text-xs text-center mt-4">
+        Live price data coming soon
       </div>
     </div>
   );
