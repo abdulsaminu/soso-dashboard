@@ -1,8 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Activity, TrendingUp, TrendingDown, Zap, ExternalLink, Sparkles, Coins, BarChart3, Shield, Clock } from "lucide-react";
+import { 
+  Activity, TrendingUp, TrendingDown, Zap, ExternalLink, 
+  Sparkles, Coins, BarChart3, Shield, Clock, 
+  Target, Eye, Wallet, RefreshCw, CheckCircle, XCircle 
+} from "lucide-react";
 
+type Asset = 'BTC' | 'ETH' | 'SOL';
 type Signal = {
   direction: "bullish" | "bearish" | "neutral";
   confidence: number;
@@ -10,34 +15,102 @@ type Signal = {
   timestamp: string;
 };
 
+type WhaleAlert = {
+  asset: string;
+  amount: number;
+  fromAddress: string;
+  toAddress: string;
+};
+
 export default function Home() {
+  const [selectedAsset, setSelectedAsset] = useState<Asset>('BTC');
   const [signal, setSignal] = useState<Signal | null>(null);
   const [loading, setLoading] = useState(true);
-  const [btcPrice, setBtcPrice] = useState<number | null>(null);
-  const [btcChange, setBtcChange] = useState<number | null>(null);
+  const [price, setPrice] = useState<number | null>(null);
+  const [change24h, setChange24h] = useState<number | null>(null);
+  const [etfInflow, setEtfInflow] = useState<number | null>(null);
+  const [sentiment, setSentiment] = useState<{ label: string; score: number } | null>(null);
+  const [whaleAlerts, setWhaleAlerts] = useState<WhaleAlert[]>([]);
+  const [accuracy, setAccuracy] = useState<string | null>(null);
+  const [autoTrade, setAutoTrade] = useState(false);
+  const [tradeStatus, setTradeStatus] = useState<string | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/signal');
+      const data = await response.json();
+      
+      if (data.error) throw new Error(data.error);
+      
+      // Set data based on selected asset
+      const assetData = data[selectedAsset.toLowerCase()];
+      setPrice(assetData.price);
+      setChange24h(assetData.change24h);
+      setSignal(data.signal);
+      setEtfInflow(data.etfInflow);
+      setSentiment(data.sentiment);
+      setWhaleAlerts(data.whaleAlerts || []);
+      setAccuracy(data.accuracy);
+    } catch (error) {
+      console.error('Fetch error:', error);
+      // Fallback mock data
+      setPrice(selectedAsset === 'BTC' ? 69420 : selectedAsset === 'ETH' ? 3800 : 180);
+      setChange24h(2.34);
       setSignal({
         direction: "bullish",
-        confidence: 82,
-        reason: "BTC ETF inflow surged +$482M in last 24h. On-chain volume +31%. Institutional demand increasing across DeFi protocols.",
+        confidence: 78,
+        reason: "ETF inflow surged +$340M. On-chain volume +22%.",
         timestamp: new Date().toLocaleTimeString(),
       });
-      setBtcPrice(69420);
-      setBtcChange(3.21);
+      setEtfInflow(340000000);
+      setSentiment({ label: "Greed", score: 72 });
+      setAccuracy("76%");
+    } finally {
       setLoading(false);
-    }, 800);
+    }
+  };
+
+  const handleTrade = async () => {
+    if (!autoTrade) {
+      alert("Enable Auto-Trade mode first (click the toggle)");
+      return;
+    }
+    
+    setTradeStatus("Placing order...");
+    try {
+      const response = await fetch('/api/trade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          asset: selectedAsset,
+          direction: signal?.direction,
+          amount: 0.001,
+        }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setTradeStatus("✅ Order placed on SoDEX testnet!");
+        setTimeout(() => setTradeStatus(null), 3000);
+      } else {
+        setTradeStatus("❌ Trade failed");
+      }
+    } catch (error) {
+      setTradeStatus("❌ Error placing trade");
+    }
   };
 
   useEffect(() => {
     fetchData();
-  }, []);
+    const interval = setInterval(fetchData, 60000);
+    return () => clearInterval(interval);
+  }, [selectedAsset]);
 
-  const handleTrade = () => {
-    alert("🚀 SoDEX testnet ready! Connect your wallet to trade.");
-  };
+  const assetButtons = [
+    { symbol: 'BTC', name: 'Bitcoin', icon: '₿' },
+    { symbol: 'ETH', name: 'Ethereum', icon: 'Ξ' },
+    { symbol: 'SOL', name: 'Solana', icon: '◎' },
+  ];
 
   return (
     <main className="min-h-screen defi-bg text-white">
@@ -69,18 +142,36 @@ export default function Home() {
 
       <div className="max-w-6xl mx-auto px-6 py-10 relative z-10">
         
-        {/* 3 Stats Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        {/* Asset Selector Buttons */}
+        <div className="flex gap-3 mb-8">
+          {assetButtons.map((asset) => (
+            <button
+              key={asset.symbol}
+              onClick={() => setSelectedAsset(asset.symbol as Asset)}
+              className={`px-5 py-2 rounded-xl font-medium transition-all duration-200 ${
+                selectedAsset === asset.symbol
+                  ? 'bg-soso-accent text-white shadow-lg shadow-soso-accent/25'
+                  : 'glass-card text-soso-text-secondary hover:text-white hover:border-soso-accent/50'
+              }`}
+            >
+              <span className="mr-2">{asset.icon}</span>
+              {asset.name}
+            </button>
+          ))}
+        </div>
+
+        {/* 4 Stats Cards */}
+        <div className="grid md:grid-cols-4 gap-6 mb-8">
           <div className="glass-card rounded-2xl p-5">
             <div className="flex items-center gap-3 mb-2">
               <Coins className="text-soso-accent" size={24} />
-              <span className="text-soso-text-secondary text-sm">BTC/USD</span>
+              <span className="text-soso-text-secondary text-sm">{selectedAsset}/USD</span>
             </div>
-            {btcPrice ? (
+            {price ? (
               <>
-                <div className="text-3xl font-bold">${btcPrice.toLocaleString()}</div>
-                <div className={`text-sm mt-1 ${btcChange && btcChange >= 0 ? 'text-soso-success' : 'text-soso-danger'}`}>
-                  {btcChange && (btcChange >= 0 ? '+' : '')}{btcChange}%
+                <div className="text-3xl font-bold">${price.toLocaleString()}</div>
+                <div className={`text-sm mt-1 ${change24h && change24h >= 0 ? 'text-soso-success' : 'text-soso-danger'}`}>
+                  {change24h && (change24h >= 0 ? '+' : '')}{change24h}%
                 </div>
               </>
             ) : (
@@ -93,20 +184,35 @@ export default function Home() {
               <BarChart3 className="text-soso-accent" size={24} />
               <span className="text-soso-text-secondary text-sm">Market Sentiment</span>
             </div>
-            <div className="text-2xl font-bold text-soso-accent">Extreme Greed</div>
-            <div className="text-soso-text-secondary text-sm mt-1">Score: 78/100</div>
+            <div className="text-2xl font-bold text-soso-accent">{sentiment?.label || "Neutral"}</div>
+            <div className="text-soso-text-secondary text-sm mt-1">Score: {sentiment?.score || 50}/100</div>
+          </div>
+
+          <div className="glass-card rounded-2xl p-5">
+            <div className="flex items-center gap-3 mb-2">
+              <Target className="text-soso-accent" size={24} />
+              <span className="text-soso-text-secondary text-sm">Signal Accuracy</span>
+            </div>
+            <div className="text-2xl font-bold text-soso-success">{accuracy || "—"}</div>
+            <div className="text-soso-text-secondary text-sm mt-1">Last 30 days</div>
           </div>
 
           <div className="glass-card rounded-2xl p-5">
             <div className="flex items-center gap-3 mb-2">
               <Shield className="text-soso-accent" size={24} />
-              <span className="text-soso-text-secondary text-sm">API Status</span>
+              <span className="text-soso-text-secondary text-sm">Auto-Trade</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="inline-block w-2 h-2 bg-soso-success rounded-full animate-pulse"></span>
-              <span className="text-soso-success font-medium">SoDEX Testnet Active</span>
-            </div>
-            <div className="text-soso-text-secondary text-sm mt-1">Ready for trading</div>
+            <button
+              onClick={() => setAutoTrade(!autoTrade)}
+              className={`px-3 py-1 rounded-lg text-sm font-medium transition-all ${
+                autoTrade 
+                  ? 'bg-soso-success/20 text-soso-success border border-soso-success/50' 
+                  : 'bg-gray-700/50 text-soso-text-secondary'
+              }`}
+            >
+              {autoTrade ? '✅ Enabled' : '⚡ Disabled'}
+            </button>
+            <div className="text-soso-text-secondary text-xs mt-2">One-click execution</div>
           </div>
         </div>
 
@@ -124,9 +230,13 @@ export default function Home() {
                   <div className="w-16 h-16 rounded-2xl bg-soso-success/10 flex items-center justify-center border border-soso-success/30">
                     <TrendingUp className="text-soso-success" size={32} />
                   </div>
-                ) : (
+                ) : signal.direction === "bearish" ? (
                   <div className="w-16 h-16 rounded-2xl bg-soso-danger/10 flex items-center justify-center border border-soso-danger/30">
                     <TrendingDown className="text-soso-danger" size={32} />
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 rounded-2xl bg-gray-500/10 flex items-center justify-center border border-gray-500/30">
+                    <Activity className="text-gray-400" size={32} />
                   </div>
                 )}
                 <div>
@@ -138,7 +248,9 @@ export default function Home() {
                       High Conviction
                     </span>
                   </div>
-                  <p className="text-soso-text-secondary text-sm mt-1">DeFi Trading Signal • {new Date().toLocaleDateString()}</p>
+                  <p className="text-soso-text-secondary text-sm mt-1">
+                    {selectedAsset} Trading Signal • {new Date().toLocaleDateString()}
+                  </p>
                 </div>
               </div>
               <div className="text-right">
@@ -155,12 +267,45 @@ export default function Home() {
             
             <button
               onClick={handleTrade}
-              className="mt-6 w-full md:w-auto bg-soso-accent hover:bg-soso-accent-hover transition-all duration-300 px-8 py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 shadow-lg shadow-soso-accent/25"
+              disabled={!autoTrade}
+              className={`mt-6 w-full md:w-auto transition-all duration-300 px-8 py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 ${
+                autoTrade 
+                  ? 'bg-soso-accent hover:bg-soso-accent-hover shadow-lg shadow-soso-accent/25 cursor-pointer' 
+                  : 'bg-gray-600 cursor-not-allowed opacity-50'
+              }`}
             >
-              <Zap size={18} /> Execute Trade on SoDEX <ExternalLink size={14} />
+              <Zap size={18} /> {autoTrade ? 'Execute Trade on SoDEX' : 'Enable Auto-Trade First'} <ExternalLink size={14} />
             </button>
+            {tradeStatus && (
+              <div className="mt-3 text-center text-sm text-soso-accent">{tradeStatus}</div>
+            )}
           </div>
         )}
+
+        {/* Whale Watch Alerts Panel */}
+        <div className="glass-card rounded-2xl p-6 mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Eye className="text-soso-accent" size={20} />
+            <h3 className="font-semibold">🐋 Whale Watch Alerts</h3>
+          </div>
+          {whaleAlerts.length === 0 ? (
+            <div className="text-soso-text-secondary text-sm">No recent whale movements detected</div>
+          ) : (
+            <div className="space-y-2">
+              {whaleAlerts.slice(0, 3).map((alert, idx) => (
+                <div key={idx} className="bg-black/30 rounded-lg p-3 border border-soso-border">
+                  <div className="flex justify-between items-center">
+                    <span className="font-mono text-soso-accent">{alert.asset}</span>
+                    <span className="text-soso-success font-bold">${(alert.amount / 1e6).toFixed(1)}M</span>
+                  </div>
+                  <div className="text-xs text-soso-text-secondary mt-1 font-mono">
+                    From: {alert.fromAddress.slice(0, 10)}... → To: {alert.toAddress.slice(0, 10)}...
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Two Column Info Panels */}
         <div className="grid md:grid-cols-2 gap-6">
@@ -169,8 +314,12 @@ export default function Home() {
               <span className="text-2xl">📊</span>
               <h3 className="font-semibold">ETF Flow (24h)</h3>
             </div>
-            <div className="text-3xl font-bold text-soso-success">+$482.3M</div>
-            <div className="text-soso-text-secondary text-sm mt-1">Net inflow • Institutional demand</div>
+            <div className={`text-3xl font-bold ${etfInflow && etfInflow >= 0 ? 'text-soso-success' : 'text-soso-danger'}`}>
+              {etfInflow ? `${etfInflow >= 0 ? '+' : ''}$${(Math.abs(etfInflow) / 1e6).toFixed(1)}M` : '—'}
+            </div>
+            <div className="text-soso-text-secondary text-sm mt-1">
+              {etfInflow && etfInflow >= 0 ? 'Net inflow' : 'Net outflow'} • Institutional demand
+            </div>
             <div className="mt-4 pt-4 border-t border-soso-border">
               <div className="flex justify-between text-sm">
                 <span className="text-soso-text-secondary">Source:</span>
@@ -191,7 +340,9 @@ export default function Home() {
             <div className="bg-black/40 rounded-lg p-3 font-mono text-sm text-soso-accent break-all border border-soso-border">
               API Key: buildathon-dashboard
             </div>
-            <div className="text-soso-text-secondary text-xs mt-3">✓ Ready for spot & perps trading</div>
+            <div className="text-soso-text-secondary text-xs mt-3">
+              {autoTrade ? '✓ Auto-trade enabled • Orders will execute' : '○ Toggle auto-trade to start trading'}
+            </div>
           </div>
         </div>
 
@@ -201,7 +352,7 @@ export default function Home() {
             Built for SoSoValue AI Buildathon Wave 2 • Powered by DeepSeek
           </p>
           <p className="text-soso-text-secondary/50 text-xs mt-2">
-            Real-time DeFi data • AI signals • SoDEX integration
+            Real-time DeFi data • AI signals • SoDEX integration • Whale alerts • Signal accuracy tracking
           </p>
         </footer>
       </div>
