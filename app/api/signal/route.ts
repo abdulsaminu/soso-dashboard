@@ -1,37 +1,43 @@
 import { NextResponse } from 'next/server';
 
-// Helper to fetch price from Binance (free, no API key needed)
-async function getBinancePrice(symbol: string) {
+// Helper to fetch price from CoinGecko (free, no API key, reliable)
+async function getCoinGeckoPrice(coinId: string) {
   try {
-    const url = `https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}USDT`;
-    const response = await fetch(url, { next: { revalidate: 5 } }); // Refresh every 5 seconds
+    // CoinGecko IDs: bitcoin, ethereum, solana
+    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd&include_24hr_change=true`;
+    const response = await fetch(url, { 
+      next: { revalidate: 10 }, // Refresh every 10 seconds
+      headers: {
+        'Accept': 'application/json',
+      }
+    });
     
-    if (!response.ok) throw new Error(`Binance API error for ${symbol}`);
+    if (!response.ok) throw new Error(`CoinGecko API error: ${response.status}`);
     
     const data = await response.json();
     
     return {
-      price: parseFloat(data.lastPrice),
-      change24h: parseFloat(data.priceChangePercent),
-      volume: parseFloat(data.volume),
+      price: data[coinId]?.usd || 0,
+      change24h: data[coinId]?.usd_24h_change || 0,
     };
   } catch (error) {
-    console.error(`Error fetching ${symbol}:`, error);
+    console.error(`Error fetching ${coinId}:`, error);
     return null;
   }
 }
 
 export async function GET() {
   try {
-    // Fetch real prices from Binance
+    // Fetch real prices from CoinGecko
     const [btcData, ethData, solData] = await Promise.all([
-      getBinancePrice('BTC'),
-      getBinancePrice('ETH'),
-      getBinancePrice('SOL'),
+      getCoinGeckoPrice('bitcoin'),
+      getCoinGeckoPrice('ethereum'),
+      getCoinGeckoPrice('solana'),
     ]);
 
     // If all fetches fail, fall back to mock data
     if (!btcData && !ethData && !solData) {
+      console.log('All API calls failed, using mock data');
       return getMockData();
     }
 
@@ -43,11 +49,11 @@ export async function GET() {
 
     if (btcPriceChange > 1) {
       direction = 'bullish';
-      confidence = Math.min(55 + Math.abs(btcPriceChange) * 3, 95);
+      confidence = Math.min(55 + Math.abs(btcPriceChange) * 2, 95);
       reason = `Bullish momentum. BTC is up +${btcPriceChange.toFixed(2)}% in the last 24 hours.`;
     } else if (btcPriceChange < -1) {
       direction = 'bearish';
-      confidence = Math.min(55 + Math.abs(btcPriceChange) * 3, 95);
+      confidence = Math.min(55 + Math.abs(btcPriceChange) * 2, 95);
       reason = `Bearish momentum. BTC is down ${Math.abs(btcPriceChange).toFixed(2)}% in the last 24 hours.`;
     } else {
       direction = 'neutral';
@@ -56,11 +62,11 @@ export async function GET() {
     }
 
     // Calculate sentiment from price change
-    const sentimentScore = 50 + btcPriceChange * 4;
+    const sentimentScore = 50 + btcPriceChange * 3;
     let sentimentLabel = 'Neutral';
-    if (btcPriceChange > 2.5) sentimentLabel = 'Extreme Greed';
+    if (btcPriceChange > 3) sentimentLabel = 'Extreme Greed';
     else if (btcPriceChange > 1) sentimentLabel = 'Greed';
-    else if (btcPriceChange < -2.5) sentimentLabel = 'Extreme Fear';
+    else if (btcPriceChange < -3) sentimentLabel = 'Extreme Fear';
     else if (btcPriceChange < -1) sentimentLabel = 'Fear';
 
     const sentiment = {
@@ -68,21 +74,19 @@ export async function GET() {
       score: Math.min(Math.max(Math.round(sentimentScore), 0), 100),
     };
 
-    // Generate signal explanation
     const signalReason = `${reason} ${direction === 'bullish' ? 'Consider long positions.' : direction === 'bearish' ? 'Consider short positions or wait.' : 'Wait for clearer direction.'}`;
 
     return NextResponse.json({
       btc: { 
-        price: btcData?.price ?? 0, 
+        price: btcData?.price ?? 63400, 
         change24h: btcData?.change24h ?? 0, 
-        volumeChange: 0 
       },
       eth: { 
-        price: ethData?.price ?? 0, 
+        price: ethData?.price ?? 3480, 
         change24h: ethData?.change24h ?? 0 
       },
       sol: { 
-        price: solData?.price ?? 0, 
+        price: solData?.price ?? 175, 
         change24h: solData?.change24h ?? 0 
       },
       signal: {
@@ -105,14 +109,15 @@ export async function GET() {
 
 // Fallback mock data with realistic prices
 function getMockData() {
+  console.log('Returning mock data');
   return NextResponse.json({
-    btc: { price: 63400, change24h: 1.2, volumeChange: 0 },
+    btc: { price: 63400, change24h: 1.2 },
     eth: { price: 3480, change24h: 0.8 },
     sol: { price: 175, change24h: 2.1 },
     signal: {
       direction: "neutral",
       confidence: 50,
-      reason: "Market data temporarily unavailable. Using cached prices.",
+      reason: "Live market data temporarily unavailable. Showing reference prices.",
       timestamp: new Date().toLocaleTimeString(),
     },
     etfInflow: 0,
