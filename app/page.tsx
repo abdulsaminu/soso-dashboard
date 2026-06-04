@@ -4,11 +4,11 @@ import { useState, useEffect } from "react";
 import { 
   Activity, TrendingUp, TrendingDown, Zap, ExternalLink, 
   Sparkles, Coins, BarChart3, Shield, Clock, 
-  Target, Eye, Wallet, RefreshCw, CheckCircle, XCircle 
+  Target, Eye 
 } from "lucide-react";
 import PriceChart from './components/PriceChart';
+import { useWebSocketPrices } from '../hooks/useWebSocketPrices';
 
-type Asset = 'BTC' | 'ETH' | 'SOL';
 type Signal = {
   direction: "bullish" | "bearish" | "neutral";
   confidence: number;
@@ -24,10 +24,12 @@ type WhaleAlert = {
 };
 
 export default function Home() {
-  const [selectedAsset, setSelectedAsset] = useState<Asset>('BTC');
+  // Get live prices from WebSocket
+  const { prices: livePrices, isConnected } = useWebSocketPrices();
+  
+  const [selectedAsset, setSelectedAsset] = useState<'BTC' | 'ETH' | 'SOL'>('BTC');
   const [signal, setSignal] = useState<Signal | null>(null);
   const [loading, setLoading] = useState(true);
-  const [price, setPrice] = useState<number | null>(null);
   const [change24h, setChange24h] = useState<number | null>(null);
   const [etfInflow, setEtfInflow] = useState<number | null>(null);
   const [sentiment, setSentiment] = useState<{ label: string; score: number } | null>(null);
@@ -36,7 +38,17 @@ export default function Home() {
   const [autoTrade, setAutoTrade] = useState(false);
   const [tradeStatus, setTradeStatus] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  // Get the current price based on selected asset
+  const getCurrentPrice = () => {
+    if (selectedAsset === 'BTC') return livePrices.btc;
+    if (selectedAsset === 'ETH') return livePrices.eth;
+    return livePrices.sol;
+  };
+
+  const currentPrice = getCurrentPrice();
+
+  // Fetch signal and other data (not prices anymore)
+  const fetchSignalData = async () => {
     setLoading(true);
     try {
       const response = await fetch('/api/signal');
@@ -44,9 +56,7 @@ export default function Home() {
       
       if (data.error) throw new Error(data.error);
       
-      const assetData = data[selectedAsset.toLowerCase()];
-      setPrice(assetData.price);
-      setChange24h(assetData.change24h);
+      setChange24h(data[selectedAsset.toLowerCase()]?.change24h || 0);
       setSignal(data.signal);
       setEtfInflow(data.etfInflow);
       setSentiment(data.sentiment);
@@ -54,7 +64,6 @@ export default function Home() {
       setAccuracy(data.accuracy);
     } catch (error) {
       console.error('Fetch error:', error);
-      setPrice(selectedAsset === 'BTC' ? 69420 : selectedAsset === 'ETH' ? 3800 : 180);
       setChange24h(2.34);
       setSignal({
         direction: "bullish",
@@ -99,10 +108,9 @@ export default function Home() {
     }
   };
 
+  // Fetch signal data when selected asset changes
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 60000);
-    return () => clearInterval(interval);
+    fetchSignalData();
   }, [selectedAsset]);
 
   const assetButtons = [
@@ -130,7 +138,14 @@ export default function Home() {
           </div>
           <div className="text-right">
             <div className="text-soso-text-secondary text-xs flex items-center gap-1 justify-end">
-              <Clock size={12} /> Last update
+              <Clock size={12} /> {isConnected ? (
+                <span className="text-green-400 flex items-center gap-1">
+                  <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                  Live
+                </span>
+              ) : (
+                <span className="text-yellow-400">Connecting...</span>
+              )}
             </div>
             <div className="text-lg font-mono font-semibold text-soso-accent tracking-wide">
               {signal?.timestamp || "--:--:--"}
@@ -146,7 +161,7 @@ export default function Home() {
           {assetButtons.map((asset) => (
             <button
               key={asset.symbol}
-              onClick={() => setSelectedAsset(asset.symbol as Asset)}
+              onClick={() => setSelectedAsset(asset.symbol as 'BTC' | 'ETH' | 'SOL')}
               className={`px-5 py-2 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 ${
                 selectedAsset === asset.symbol
                   ? 'bg-soso-accent text-white shadow-lg shadow-soso-accent/25'
@@ -161,20 +176,20 @@ export default function Home() {
 
         {/* 4 Stats Cards */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
+          {/* Price Card - NOW USING WEBSOCKET LIVE PRICES */}
           <div className="glass-card p-5">
             <div className="flex items-center gap-3 mb-2">
               <Coins className="text-soso-accent" size={24} />
               <span className="text-soso-text-secondary text-sm">{selectedAsset}/USD</span>
             </div>
-            {price ? (
-              <>
-                <div className="text-3xl font-bold">${price.toLocaleString()}</div>
-                <div className={`text-sm mt-1 ${change24h && change24h >= 0 ? 'text-soso-success' : 'text-soso-danger'}`}>
-                  {change24h && (change24h >= 0 ? '+' : '')}{change24h}%
-                </div>
-              </>
-            ) : (
-              <div className="text-soso-text-secondary">Loading...</div>
+            <div className="text-3xl font-bold">
+              {currentPrice ? `$${currentPrice.toLocaleString()}` : 'Loading...'}
+            </div>
+            <div className={`text-sm mt-1 ${change24h && change24h >= 0 ? 'text-soso-success' : 'text-soso-danger'}`}>
+              {change24h && (change24h >= 0 ? '+' : '')}{change24h}%
+            </div>
+            {isConnected && (
+              <div className="text-xs text-green-400 mt-1">Live</div>
             )}
           </div>
 
@@ -342,7 +357,7 @@ export default function Home() {
               <span className="text-soso-success font-medium">Connected to Testnet</span>
             </div>
             <div className="bg-black/40 rounded-lg p-3 font-mono text-sm text-soso-accent break-all border border-soso-border">
-              API Key: buildathon-dashboard
+              API Key: buildathon-wave2-v2
             </div>
             <div className="text-soso-text-secondary text-xs mt-3">
               {autoTrade ? '✓ Auto-trade enabled • Orders will execute' : '○ Toggle auto-trade to start trading'}
