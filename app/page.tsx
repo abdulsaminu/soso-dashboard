@@ -90,8 +90,8 @@ export default function Home() {
       setEtfInflow(340000000);
       setSentiment({ label: "Greed", score: 72 });
       setAccuracy("76%");
-      setCurrentPrice(selectedAsset === 'BTC' ? 69420 : selectedAsset === 'ETH' ? 3800 : 180);
-      setChange24h(2.34);
+      setCurrentPrice(selectedAsset === 'BTC' ? 63400 : selectedAsset === 'ETH' ? 1793 : 70);
+      setChange24h(1.2);
     } finally {
       setLoading(false);
     }
