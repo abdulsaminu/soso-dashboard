@@ -7,7 +7,6 @@ import {
   Target, Eye 
 } from "lucide-react";
 import PriceChart from './components/PriceChart';
-import { useWebSocketPrices } from '../hooks/useWebSocketPrices';
 
 type Signal = {
   direction: "bullish" | "bearish" | "neutral";
@@ -24,13 +23,17 @@ type WhaleAlert = {
 };
 
 export default function Home() {
-  // Get live prices from WebSocket
-  const { prices: livePrices, isConnected } = useWebSocketPrices();
-  
+  // Asset selection
   const [selectedAsset, setSelectedAsset] = useState<'BTC' | 'ETH' | 'SOL'>('BTC');
+  
+  // Price data
+  const [currentPrice, setCurrentPrice] = useState<number | null>(null);
+  const [change24h, setChange24h] = useState<number | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Signal and other data
   const [signal, setSignal] = useState<Signal | null>(null);
   const [loading, setLoading] = useState(true);
-  const [change24h, setChange24h] = useState<number | null>(null);
   const [etfInflow, setEtfInflow] = useState<number | null>(null);
   const [sentiment, setSentiment] = useState<{ label: string; score: number } | null>(null);
   const [whaleAlerts, setWhaleAlerts] = useState<WhaleAlert[]>([]);
@@ -38,16 +41,23 @@ export default function Home() {
   const [autoTrade, setAutoTrade] = useState(false);
   const [tradeStatus, setTradeStatus] = useState<string | null>(null);
 
-  // Get the current price based on selected asset
-  const getCurrentPrice = () => {
-    if (selectedAsset === 'BTC') return livePrices.btc;
-    if (selectedAsset === 'ETH') return livePrices.eth;
-    return livePrices.sol;
+  // Fetch current price only
+  const fetchCurrentPrice = async () => {
+    setIsRefreshing(true);
+    try {
+      const response = await fetch('/api/signal');
+      const data = await response.json();
+      const assetData = data[selectedAsset.toLowerCase()];
+      setCurrentPrice(assetData.price);
+      setChange24h(assetData.change24h);
+    } catch (error) {
+      console.error('Price fetch error:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
-  const currentPrice = getCurrentPrice();
-
-  // Fetch signal and other data (not prices anymore)
+  // Fetch signal and other data (not prices)
   const fetchSignalData = async () => {
     setLoading(true);
     try {
@@ -56,15 +66,21 @@ export default function Home() {
       
       if (data.error) throw new Error(data.error);
       
-      setChange24h(data[selectedAsset.toLowerCase()]?.change24h || 0);
       setSignal(data.signal);
       setEtfInflow(data.etfInflow);
       setSentiment(data.sentiment);
       setWhaleAlerts(data.whaleAlerts || []);
       setAccuracy(data.accuracy);
+      
+      // Also update price from the same call
+      const assetData = data[selectedAsset.toLowerCase()];
+      if (assetData) {
+        setCurrentPrice(assetData.price);
+        setChange24h(assetData.change24h);
+      }
     } catch (error) {
       console.error('Fetch error:', error);
-      setChange24h(2.34);
+      // Fallback mock data
       setSignal({
         direction: "bullish",
         confidence: 78,
@@ -74,11 +90,14 @@ export default function Home() {
       setEtfInflow(340000000);
       setSentiment({ label: "Greed", score: 72 });
       setAccuracy("76%");
+      setCurrentPrice(selectedAsset === 'BTC' ? 69420 : selectedAsset === 'ETH' ? 3800 : 180);
+      setChange24h(2.34);
     } finally {
       setLoading(false);
     }
   };
 
+  // Handle auto-trade execution
   const handleTrade = async () => {
     if (!autoTrade) {
       alert("Enable Auto-Trade mode first (click the toggle)");
@@ -108,9 +127,17 @@ export default function Home() {
     }
   };
 
-  // Fetch signal data when selected asset changes
+  // Fetch data when selected asset changes
   useEffect(() => {
     fetchSignalData();
+  }, [selectedAsset]);
+
+  // Optional: Refresh price every 30 seconds automatically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchCurrentPrice();
+    }, 30000);
+    return () => clearInterval(interval);
   }, [selectedAsset]);
 
   const assetButtons = [
@@ -136,19 +163,19 @@ export default function Home() {
               <p className="text-soso-text-secondary text-xs">DeFi Intelligence Dashboard</p>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-soso-text-secondary text-xs flex items-center gap-1 justify-end">
-              <Clock size={12} /> {isConnected ? (
-                <span className="text-green-400 flex items-center gap-1">
-                  <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                  Live
-                </span>
-              ) : (
-                <span className="text-yellow-400">Connecting...</span>
-              )}
-            </div>
-            <div className="text-lg font-mono font-semibold text-soso-accent tracking-wide">
-              {signal?.timestamp || "--:--:--"}
+          <div className="text-right flex items-center gap-3">
+            <button
+              onClick={fetchCurrentPrice}
+              disabled={isRefreshing}
+              className="px-2 py-1 text-xs bg-soso-accent/20 hover:bg-soso-accent/40 rounded transition-all"
+            >
+              {isRefreshing ? '⟳' : 'Refresh Price'}
+            </button>
+            <div>
+              <div className="text-soso-text-secondary text-xs">Last update</div>
+              <div className="text-lg font-mono font-semibold text-soso-accent tracking-wide">
+                {signal?.timestamp || "--:--:--"}
+              </div>
             </div>
           </div>
         </div>
@@ -176,7 +203,7 @@ export default function Home() {
 
         {/* 4 Stats Cards */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
-          {/* Price Card - NOW USING WEBSOCKET LIVE PRICES */}
+          {/* Price Card */}
           <div className="glass-card p-5">
             <div className="flex items-center gap-3 mb-2">
               <Coins className="text-soso-accent" size={24} />
@@ -188,9 +215,6 @@ export default function Home() {
             <div className={`text-sm mt-1 ${change24h && change24h >= 0 ? 'text-soso-success' : 'text-soso-danger'}`}>
               {change24h && (change24h >= 0 ? '+' : '')}{change24h}%
             </div>
-            {isConnected && (
-              <div className="text-xs text-green-400 mt-1">Live</div>
-            )}
           </div>
 
           <div className="glass-card p-5">
